@@ -5,3 +5,6 @@ dist
 versiontools*
 build*
 django_sse.egg-info
+.project
+.pydevproject
+.settings/org.eclipse.core.resources.prefs
