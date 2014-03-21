@@ -12,7 +12,6 @@ from redis.connection import DefaultParser
 from .views import BaseSseView
 
 import json
-import gevent
 
 
 CONNECTION_KWARGS = getattr(settings, 'REDIS_SSEQUEUE_CONNECTION_SETTINGS', {})
@@ -64,27 +63,16 @@ class RedisQueueView(BaseSseView):
         connection = _connect()
         pubsub = connection.pubsub()
         pubsub.subscribe(self.get_redis_channel())
-        keep_alive = gevent.spawn(self.keep_alive)
+
         for message in pubsub.listen():
             if message['type'] == 'message':
                 event, data = json.loads(message['data'].decode('utf-8'))
                 self.sse.add_message(event, data)
                 yield
-        try:
-            keep_alive.kill()
-        except:
-            pass
 
     def get_redis_channel(self):
         return self.redis_channel
-    
-    def keep_alive(self):
-        channel = self.get_redis_channel()
-        while True:
-            if send_event('ping', '1', channel = channel) > 0:#only send if we are listening
-                gevent.sleep(30)
-            else:
-                break
+
 
 def _connect():
     pool = ConnectionPoolManager.connection_pool(**CONNECTION_KWARGS)
@@ -93,7 +81,7 @@ def _connect():
 
 def send_event(event_name, data, channel=DEFAULT_CHANNEL):
     connection = _connect()
-    return connection.publish(channel, json.dumps([event_name, data]))
+    connection.publish(channel, json.dumps([event_name, data]))
 
 
 __all__ = ['send_event', 'RedisQueueView']
