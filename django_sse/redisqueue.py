@@ -81,7 +81,7 @@ def _connect():
 
 def send_event(event_name, data, channel=DEFAULT_CHANNEL):
     connection = _connect()
-    connection.publish(channel, json.dumps([event_name, data]))
+    return connection.publish(channel, json.dumps([event_name, data]))
 
 
 __all__ = ['send_event', 'RedisQueueView']
